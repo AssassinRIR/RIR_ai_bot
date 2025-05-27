@@ -7,20 +7,35 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="chat-container">
-        <h1>Netlify AI Bot</h1>
-        <div id="chat-box">
-            <!-- Chat messages will appear here -->
-            <div class="message bot-message">
-                <p>Hello! I'm your friendly AI bot. How can I help you today?</p>
+    <h1 id="main-title">Welcome to our Solar System</h1>
+
+    <canvas id="solar-system-bg"></canvas>
+    <div id="main-layout">
+        <div id="chat-container">
+            <div id="chat-header">
+                <div id="chat-title">Chat with RIR</div>
+                <div id="chat-controls">
+                    <button id="fullscreen-btn" title="Fullscreen">⛶</button>
+                    <button id="delete-btn" title="Delete Chat">🗑️</button>
+                    <button id="close-btn" title="Close Chat">✖️</button>
+                    <button id="upload-btn" title="Upload File">📁</button>
+                    <button id="voice-btn" title="Voice Input">🎤</button>
+                </div>
+            </div>
+            <div id="chat-box">
+                <!-- Chat messages will appear here -->
+                <div class="message bot-message">
+                    <p>Hello! I'm RIR. How can I help you today?</p>
+                </div>
+            </div>
+            <div id="input-area">
+                <input type="text" id="user-input" placeholder="Type your message...">
+                <button id="send-btn">Send</button>
             </div>
         </div>
-        <div id="input-area">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button id="send-btn">Send</button>
-        </div>
     </div>
-
+    <input type="file" id="file-input" style="display:none" />
     <script src="script.js"></script>
+    <script src="solar-system.js"></script>
 </body>
 </html>
