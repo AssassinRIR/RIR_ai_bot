@@ -15,15 +15,32 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(text, sender, isThinking = false) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-        const p = document.createElement('p');
-        p.textContent = text;
-        messageDiv.appendChild(p);
+
+        const content = document.createElement('div');
+
+        // Detect and render code blocks
+        if (text.startsWith("```") && text.endsWith("```")) {
+            const code = text.replace(/```[a-zA-Z]*\n?/, '').replace(/```$/, '');
+            const pre = document.createElement('pre');
+            const codeElement = document.createElement('code');
+            codeElement.textContent = code;
+            pre.appendChild(codeElement);
+            content.appendChild(pre);
+        } else {
+            const p = document.createElement('p');
+            p.textContent = text;
+            content.appendChild(p);
+        }
+
+        messageDiv.appendChild(content);
 
         if (isThinking) {
             messageDiv.classList.add('thinking');
             thinkingMessageElement = messageDiv;
-        } else if (thinkingMessageElement && chatBox.contains(thinkingMessageElement)) {
-            chatBox.removeChild(thinkingMessageElement);
+        } else if (thinkingMessageElement) {
+            if (chatBox.contains(thinkingMessageElement)) {
+                chatBox.removeChild(thinkingMessageElement);
+            }
             thinkingMessageElement = null;
         }
 
@@ -34,11 +51,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateThinkingMessage(newText) {
         if (thinkingMessageElement) {
-            thinkingMessageElement.querySelector('p').textContent = newText;
             thinkingMessageElement.classList.remove('thinking');
+            thinkingMessageElement.innerHTML = '';
+
+            if (newText.startsWith("```") && newText.endsWith("```")) {
+                const code = newText.replace(/```[a-zA-Z]*\n?/, '').replace(/```$/, '');
+                const pre = document.createElement('pre');
+                const codeElement = document.createElement('code');
+                codeElement.textContent = code;
+                pre.appendChild(codeElement);
+                thinkingMessageElement.appendChild(pre);
+            } else {
+                const p = document.createElement('p');
+                p.textContent = newText;
+                thinkingMessageElement.appendChild(p);
+            }
+
             chatBox.scrollTop = chatBox.scrollHeight;
-            thinkingMessageElement = null;
         }
+        thinkingMessageElement = null;
     }
 
     async function getBotResponse(userText) {
@@ -48,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.dispatchEvent(new CustomEvent('solarSystemSpeed', { detail: { fast: true } }));
 
         try {
-            const response = await fetch('/.netlify/functions/gemini-handler', {
+            const response = await fetch('/.netlify/functions/get-ai-response', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -63,7 +94,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             updateThinkingMessage(data.reply);
-
         } catch (error) {
             console.error("Error fetching AI response:", error);
             updateThinkingMessage("Sorry, I encountered an error. Please try again.");
@@ -78,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleUserMessage() {
         const userText = userInput.value.trim();
         if (userText === "") return;
+
         addMessage(userText, 'user');
         userInput.value = "";
         getBotResponse(userText);
@@ -107,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadBtn.addEventListener('click', () => {
         fileInput.click();
     });
+
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
             addMessage(`Uploaded file: ${e.target.files[0].name}`, 'user');

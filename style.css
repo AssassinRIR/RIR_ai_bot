@@ -8,6 +8,21 @@ body {
     background: #b10b0b; /* fallback for canvas */
 }
 
+pre {
+    background-color: #1e1e1e;
+    color: #f8f8f2;
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 14px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+
+
+
 #solar-system-bg {
     position: fixed;
     top: 0;
