@@ -1,6 +1,4 @@
-// netlify/functions/ai-handler.js
-
-import OpenAI from "openai"; // ES module import
+// netlify/functions/gemini-handler.js
 
 export async function handler(event, context) {
     if (event.httpMethod !== 'POST') {
@@ -10,24 +8,15 @@ export async function handler(event, context) {
         };
     }
 
-    const { OPENROUTER_API_KEY, SITE_URL, SITE_NAME } = process.env;
+    const { GEMINI_API_KEY } = process.env;
 
-    if (!OPENROUTER_API_KEY) {
-        console.error("OpenRouter API key not found.");
+    if (!GEMINI_API_KEY) {
+        console.error("Gemini API key not found.");
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'API key not configured.' }),
+            body: JSON.stringify({ error: 'GEMINI API key is not configured.' }),
         };
     }
-
-    const openai = new OpenAI({
-        apiKey: OPENROUTER_API_KEY,
-        baseURL: "https://openrouter.ai/api/v1",
-        defaultHeaders: {
-            "HTTP-Referer": SITE_URL || "https://your-site.netlify.app", // optional
-            "X-Title": SITE_NAME || "My Netlify AI App", // optional
-        },
-    });
 
     try {
         const body = JSON.parse(event.body);
@@ -40,15 +29,28 @@ export async function handler(event, context) {
             };
         }
 
-        const completion = await openai.chat.completions.create({
-            messages: [
-                { role: "system", content: "You are a helpful, friendly AI assistant." },
-                { role: "user", content: userPrompt }
-            ],
-            model: "deepseek/deepseek-chat-v3-0324:free",
-        });
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [
+                        {
+                            parts: [
+                                { text: userPrompt }
+                            ]
+                        }
+                    ]
+                }),
+            }
+        );
 
-        const aiReply = completion.choices[0]?.message?.content?.trim() || "Sorry, I couldn't generate a response.";
+        const data = await response.json();
+
+        const aiReply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "No response from Gemini API.";
 
         return {
             statusCode: 200,
@@ -56,11 +58,10 @@ export async function handler(event, context) {
         };
 
     } catch (error) {
-        console.error("Error calling OpenRouter API:", error);
-        const message = error?.message || "An error occurred during the API request.";
+        console.error("Error calling Gemini API:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: `OpenRouter API Error: ${message}` }),
+            body: JSON.stringify({ error: "Gemini API Error: " + (error.message || "Unknown error") }),
         };
     }
 }
