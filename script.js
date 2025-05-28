@@ -2,9 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
     const sendBtn = document.getElementById('send-btn');
-    let thinkingMessageElement = null; // To hold the "Thinking..." message element
+    let thinkingMessageElement = null;
 
-    // Button references
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const deleteBtn = document.getElementById('delete-btn');
     const closeBtn = document.getElementById('close-btn');
@@ -16,50 +15,40 @@ document.addEventListener('DOMContentLoaded', () => {
     function addMessage(text, sender, isThinking = false) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-        
         const p = document.createElement('p');
         p.textContent = text;
         messageDiv.appendChild(p);
 
         if (isThinking) {
-            messageDiv.classList.add('thinking'); // Add class for styling "thinking..."
-            thinkingMessageElement = messageDiv; // Store reference
-        } else if (thinkingMessageElement) {
-            // If a real message comes, remove the "thinking" one if it's still there
-            // This might not be strictly necessary if updateThinkingMessage is always called
-            // but good as a fallback.
-            if (chatBox.contains(thinkingMessageElement)) {
-                chatBox.removeChild(thinkingMessageElement);
-            }
+            messageDiv.classList.add('thinking');
+            thinkingMessageElement = messageDiv;
+        } else if (thinkingMessageElement && chatBox.contains(thinkingMessageElement)) {
+            chatBox.removeChild(thinkingMessageElement);
             thinkingMessageElement = null;
         }
-        
+
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
-        return messageDiv; // Return the element for potential modification (like updating "Thinking...")
+        return messageDiv;
     }
 
     function updateThinkingMessage(newText) {
         if (thinkingMessageElement) {
             thinkingMessageElement.querySelector('p').textContent = newText;
-            thinkingMessageElement.classList.remove('thinking'); // Remove thinking animation
+            thinkingMessageElement.classList.remove('thinking');
             chatBox.scrollTop = chatBox.scrollHeight;
+            thinkingMessageElement = null;
         }
-        thinkingMessageElement = null; // Clear reference
     }
 
-
     async function getBotResponse(userText) {
-        // Add a "Bot is thinking..." message
-        addMessage("Thinking", 'bot', true);
+        addMessage("Thinking...", 'bot', true);
         sendBtn.disabled = true;
         userInput.disabled = true;
-        // Notify solar system to speed up
         window.dispatchEvent(new CustomEvent('solarSystemSpeed', { detail: { fast: true } }));
+
         try {
-            // The path to your Netlify Function
-            // Netlify automatically maps /netlify/functions/your-function-name to the endpoint
-            const response = await fetch('/.netlify/functions/get-ai-response', {
+            const response = await fetch('/.netlify/functions/gemini-handler', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -73,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const data = await response.json();
-            updateThinkingMessage(data.reply); // Update the "Thinking..." message with the actual reply
+            updateThinkingMessage(data.reply);
 
         } catch (error) {
             console.error("Error fetching AI response:", error);
@@ -82,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sendBtn.disabled = false;
             userInput.disabled = false;
             userInput.focus();
-            // Notify solar system to slow down
             window.dispatchEvent(new CustomEvent('solarSystemSpeed', { detail: { fast: false } }));
         }
     }
@@ -90,22 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleUserMessage() {
         const userText = userInput.value.trim();
         if (userText === "") return;
-
         addMessage(userText, 'user');
         userInput.value = "";
-
         getBotResponse(userText);
     }
 
     sendBtn.addEventListener('click', handleUserMessage);
-
     userInput.addEventListener('keypress', (event) => {
-        if (event.key === 'Enter') {
-            handleUserMessage();
-        }
+        if (event.key === 'Enter') handleUserMessage();
     });
 
-    // Fullscreen toggle
     fullscreenBtn.addEventListener('click', () => {
         if (!document.fullscreenElement) {
             chatContainer.requestFullscreen();
@@ -114,17 +96,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Delete chat (clear messages)
     deleteBtn.addEventListener('click', () => {
         chatBox.innerHTML = '';
     });
 
-    // Close chat (hide container)
     closeBtn.addEventListener('click', () => {
         chatContainer.classList.add('closed');
     });
 
-    // Upload file
     uploadBtn.addEventListener('click', () => {
         fileInput.click();
     });
@@ -134,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Voice input (placeholder)
     let recognizing = false;
     let recognition;
     if ('webkitSpeechRecognition' in window) {
@@ -156,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             voiceBtn.textContent = '🎤';
         };
     }
+
     voiceBtn.addEventListener('click', () => {
         if (!recognizing && recognition) {
             recognition.start();

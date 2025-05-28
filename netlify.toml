@@ -1,7 +1,7 @@
-[build]
-  functions = "netlify/functions"
+[functions]
+  directory = "netlify/functions"
 
 [[redirects]]
-  from = "/api/chat"
-  to = "/.netlify/functions/get-ai-response"
+  from = "/api/gemini"
+  to = "/.netlify/functions/gemini-handler"
   status = 200
