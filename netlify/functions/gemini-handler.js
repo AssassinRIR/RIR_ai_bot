@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// netlify/functions/gemini-handler.js
 
 export async function handler(event, context) {
     if (event.httpMethod !== 'POST') {
