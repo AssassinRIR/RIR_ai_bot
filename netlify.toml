@@ -1,7 +1,7 @@
 [build]
-  publish = "."
   functions = "netlify/functions"
 
-[functions]
-  node_bundler = "esbuild"
-  # node_version = "18" # or "20", optional but good practice
+[[redirects]]
+  from = "/api/chat"
+  to = "/.netlify/functions/get-ai-response"
+  status = 200
